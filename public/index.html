@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>HPC 工作台 · Claude Sessions</title>
+  <link rel="stylesheet" href="/setup.css">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml"><link rel="stylesheet" href="/style.css"><link rel="stylesheet" href="/vendor/xterm.css"><link rel="stylesheet" href="/terminal.css">
+  <script src="/vendor/xterm.js" defer></script><script src="/vendor/addon-fit.js" defer></script><script src="/web-terminal.js" defer></script><script src="/app.js" defer></script>
+</head>
+<body>
+  <aside class="sidebar">
+    <a class="brand" href="/"><span class="brand-icon">›_</span><span>HPC<span class="brand-light"> / 工作台</span></span></a>
+    <div class="workspace-label">个人工作空间</div>
+    <nav aria-label="项目视图">
+      <button class="nav-item active" data-view="all"><span>▦</span> 项目总览 <b id="navCount">—</b></button>
+      <button class="nav-item" data-view="pinned"><span>☆</span> 常用项目 <b id="pinCount">—</b></button>
+      <button class="nav-item" data-view="recent"><span>◷</span> 最近 7 天</button>
+      <a class="nav-item" href="/files" target="_blank" rel="noopener">⇅ 文件管理</a>
+    </nav>
+    <div class="sidebar-divider"></div>
+    <button class="button secondary" data-setup>配置我的服务器</button>
+    <div class="workspace-label">连接</div>
+    <div class="server-card"><div class="server-title"><span class="status-dot"></span> HPC 服务器</div><strong id="sidebarHost">未配置 SSH</strong><span id="sidebarNode">正在读取连接…</span></div>
+    <div class="sidebar-bottom"><div class="local-tag"><span></span> 本地工作台</div><p>每个项目，一个入口。<br>接着上次的思路继续。</p><div class="profile"><span class="avatar">HPC</span><div>我的工作区<small>Research workspace</small></div></div></div>
+  </aside>
+  <main>
+    <header class="topbar"><div><span class="breadcrumb">工作空间</span><span class="slash">/</span><span id="breadcrumbView">项目总览</span></div><div class="topbar-right"><button class="button secondary" id="connectionSettings">连接设置</button><button class="button secondary" id="showTerminals" hidden>已打开的会话</button><span id="syncTime">尚未同步</span><button class="icon-button" id="refreshButton" title="刷新服务器会话" aria-label="刷新服务器会话">↻</button></div></header>
+    <div class="content">
+      <div class="channel-bar"><div class="channel-switch" role="group" aria-label="看板连接通道"><button data-channel="direct" aria-pressed="false" title="校园网或已连接校园 VPN 时使用">校内 / VPN 直连</button><button data-channel="proxy" aria-pressed="false" title="使用校园客户端提供的本地 SOCKS5 端口">校园 SOCKS</button><button data-channel="jump" aria-pressed="false" title="通过校外跳板机连接原来的 HPC 会话">校外 / 跳板机</button></div><span class="channel-status" data-channel-status role="status"></span></div>
+      <section class="hero"><div><div class="eyebrow"><span></span> YOUR RESEARCH, RESUMED</div><h1>让工作，接着发生<span>。</span></h1><p>熟悉的目录，未完的对话。打开就能继续。</p></div><div class="hero-mark" aria-hidden="true"><span>›</span><i>_</i><small>CONNECTED IDEAS</small></div></section>
+      <div class="banner" id="errorBanner" role="alert" hidden></div>
+      <section class="stats" aria-label="工作区概况"><div><span>项目目录</span><strong id="projectStat">—</strong><small>已发现 Claude 历史</small></div><div><span>常用项目</span><strong id="pinnedStat">—</strong><small>星标收藏，一键打开</small></div><div><span>历史会话</span><strong id="sessionStat">—</strong><small>每组索引最近 30 条</small></div><div><span>保留的终端</span><strong id="terminalStat">—</strong><small>在当前 HPC 节点上</small></div></section>
+      <section class="projects-section">
+        <div class="section-heading"><div><h2 id="sectionTitle">项目总览 <span id="sectionCount">0</span></h2><p id="sectionDescription">从最近的会话开始，或打开一个新的想法。</p></div><div class="heading-actions"><button class="button secondary" id="addProject">＋ 添加目录</button><button class="button primary" id="openPinned">↗ 打开全部常用</button></div></div>
+        <div class="toolbar"><label class="search"><span>⌕</span><input id="search" type="search" placeholder="搜索项目、目录或会话…" aria-label="搜索项目、目录或会话"><kbd>/</kbd></label><div class="toolbar-options"><label>启动账号 <select id="account" aria-label="启动账号"><option value="claude">默认 Claude</option></select></label><select id="sort" aria-label="项目排序"><option value="recent">最近活跃</option><option value="name">项目名称</option></select></div></div>
+        <div id="projectGrid" class="project-grid"><div class="empty loading">正在从 HPC 读取项目和会话…</div></div>
+      </section>
+      <footer><span><span class="tiny-dot"></span> 网页直接交互 · HPC 会话保留</span><span>关闭网页后仍可接回 · 手动刷新获取最新会话</span></footer>
+    </div>
+  </main>
+  <section id="terminalWorkspace" class="terminal-workspace" aria-label="Claude 网页工作区" hidden>
+    <div class="terminal-tabbar"><button class="back-to-board" id="backToBoard">‹ 工作看板</button><div id="terminalTabs" role="tablist" aria-label="已打开的项目"></div></div>
+    <div class="channel-bar"><div class="channel-switch" role="group" aria-label="终端连接通道"><button data-channel="direct" aria-pressed="false" title="校园网或已连接校园 VPN 时使用">校内 / VPN 直连</button><button data-channel="proxy" aria-pressed="false" title="使用校园客户端提供的本地 SOCKS5 端口">校园 SOCKS</button><button data-channel="jump" aria-pressed="false" title="通过校外跳板机连接原来的 HPC 会话">校外 / 跳板机</button></div><span class="channel-status" data-channel-status role="status"></span></div>
+    <div class="terminal-toolbar"><div class="terminal-location"><span id="terminalConnection" class="connection-label">正在连接…</span><span id="terminalPath"></span></div><div class="terminal-actions"><button id="terminalConnectionSettings">连接设置</button><span id="inputAccess" class="input-access">检查输入权限…</span><button id="takeControl" hidden>接管输入</button><button id="terminalHistory">历史会话</button><button id="sessionLocations">找回旧会话</button><button id="reconnectTerminal" title="已退出的 Claude 会从原对话恢复；运行中的 Claude 只重新连接">↻ 重连</button><button id="restartTerminal">重启 Claude</button><button id="closeTerminal" title="关闭网页标签，HPC 上的会话继续保留">关闭标签 ×</button></div></div>
+    <div id="protectionNotice" class="protection-notice" role="status" hidden></div>
+    <div id="terminalPanes"></div>
+    <div class="terminal-bottom"><span>Shift＋鼠标拖选后 Ctrl+C 复制 · Ctrl+V 粘贴 · 滚轮浏览记录 · Esc 返回输入 · Shift+Enter 换行</span><div class="terminal-actions"><button id="copyTerminal" title="按住 Shift 拖选文字后复制；无选中文字时 Ctrl+C 仍为中断">复制选中</button><button id="pasteTerminal" disabled>粘贴文字</button></div></div>
+  </section>
+  <dialog id="clipboardDialog"><div class="dialog-heading"><h2 id="clipboardTitle">粘贴文字</h2><button class="icon-button" data-close="clipboardDialog" aria-label="关闭复制粘贴框">×</button></div><p id="clipboardHelp" class="locations-help"></p><textarea id="clipboardText" aria-label="复制粘贴文字" spellcheck="false" placeholder="在这里按 Ctrl+V 粘贴文字"></textarea><p id="clipboardStatus" role="status"></p><button id="insertClipboard" class="button primary">插入终端</button></dialog>
+  <dialog id="sessionDialog"><div class="dialog-heading"><div><div class="eyebrow">SESSION HISTORY</div><h2 id="dialogTitle">历史会话</h2></div><button class="icon-button" data-close="sessionDialog" aria-label="关闭">×</button></div><p class="dialog-path" id="dialogPath"></p><div id="sessionList"></div></dialog>
+  <dialog id="locationsDialog" class="locations-dialog"><div class="dialog-heading"><div><div class="eyebrow">RECOVER YOUR SESSION</div><h2 id="locationsTitle">找回旧会话</h2></div><button class="icon-button" data-close="locationsDialog" aria-label="关闭会话位置">×</button></div><p class="dialog-path" id="locationsIdentity"></p><p class="locations-help">选择仍在 HPC 运行的旧会话，直接接回网页继续提问。可以先查看两边的输出，再决定继续哪一个。</p><div class="locations-heading"><span id="locationsStatus" role="status"></span><button id="refreshLocations" class="button secondary">重新检查</button></div><div id="locationsList"></div><section id="locationPreview" hidden><div class="locations-heading"><strong id="locationPreviewTitle"></strong><button id="refreshPreview" class="button secondary">刷新输出</button></div><pre id="locationOutput" tabindex="0" aria-label="原终端输出"></pre></section><p class="locations-help" id="locationsNext"></p></dialog>
+  <dialog id="recoveryDialog"><div class="dialog-heading"><div><div class="eyebrow">CONTINUE THIS SESSION</div><h2 id="recoveryHeading">确认接回旧会话</h2></div><button class="icon-button" data-close="recoveryDialog" aria-label="取消恢复">×</button></div><p class="locations-help" id="recoveryExplanation">同一份对话有多个 Claude 进程，需要保留一个才能恢复输入。</p><div id="recoveryKeep" class="recovery-keep"></div><div id="recoveryStop" class="recovery-stop"></div><p class="locations-help" id="recoveryWarning">结束列出的重复 Claude 可能中断它们尚未完成的请求。已保存的对话历史会保留；选中的旧 Claude 不会重新启动。</p><label class="recovery-consent"><input id="recoveryConsent" type="checkbox"><span id="recoveryConsentText">我确认结束上面列出的重复 Claude，继续保留的旧会话。</span></label><p id="recoveryStatus" role="status"></p><button id="confirmRecovery" class="button primary" disabled>结束重复实例并进入旧会话</button></dialog>
+  <dialog id="addDialog"><div class="dialog-heading"><div><div class="eyebrow">ADD A WORKSPACE</div><h2>添加常用目录</h2></div><button class="icon-button" data-close="addDialog" aria-label="关闭">×</button></div><p class="dialog-path">选择 HPC 上的目录，添加后可直接启动新会话。</p><form id="addForm"><label class="field-label" for="directoryInput">远端目录</label><input id="directoryInput" list="directories" required placeholder="/home/your-user/project" autocomplete="off"><datalist id="directories"></datalist><button class="button primary" type="submit">添加到常用项目</button></form></dialog>
+  <dialog id="connectionDialog"><div class="dialog-heading"><div><div class="eyebrow">CONNECT TO HPC</div><h2>连接设置</h2></div><button class="icon-button" data-close="connectionDialog" aria-label="关闭连接设置">×</button></div><form id="connectionForm"><label class="field-label" for="connectionMode">连接方式</label><select id="connectionMode"><option value="jump">校外 · SSH 跳板机</option><option value="proxy">校园 · 本地 SOCKS5（端口在服务器配置中设置）</option><option value="direct">校内 / VPN · 直接连接</option></select><div id="jumpFields"><p class="locations-help">使用「配置我的服务器」中填写的跳板机，登录后本次服务共用连接。</p><label class="field-label" for="jumpPassword">跳板机密码</label><input id="jumpPassword" type="password" autocomplete="current-password"><p class="locations-help">密码仅用于登录，不写入配置文件或日志。通道断开或看板服务重启后需要重新登录。</p></div><p id="jumpLoginStatus" role="status"></p><button class="button primary" id="connectBoard" type="submit">登录并连接 HPC</button></form></dialog>
+  <div id="toast" class="toast" role="status" hidden></div>
+  <dialog id="setupDialog"><div class="dialog-heading"><h2>配置我的服务器</h2><button class="icon-button" data-close="setupDialog" aria-label="关闭服务器配置">×</button></div><p class="locations-help">每个人填写自己的 SSH 别名和固定 HPC 节点地址。私钥、密码和 API Key 不要填在此处。字段示例见<a href="/guide.html" target="_blank" rel="noopener">使用指南</a>。</p><label class="field-label" for="setupJSON">本机连接配置（JSON）</label><textarea id="setupJSON" spellcheck="false" aria-label="本机连接配置 JSON"></textarea><div class="setup-actions"><button id="saveSetup" class="button primary">保存配置</button><button id="setupLogin" class="button secondary">登录校外跳板机</button></div><p class="locations-help">保存后验证节点；校外通道请先登录跳板机。验证只读取节点身份，不启动 Claude。</p><label class="field-label" for="verifyAddress">待验证节点（默认当前节点）</label><input id="verifyAddress" placeholder="已配置的节点 IP 或域名"><div class="setup-actions"><button id="verifySetup" class="button secondary">验证并登记节点</button><button id="finishSetup" class="button primary">读取我的项目</button></div><p id="setupStatus" role="status"></p></dialog>
+</body>
+</html>

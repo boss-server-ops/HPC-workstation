@@ -1,0 +1,7 @@
+#setupDialog{width:min(780px,94vw);max-height:92vh;overflow:auto}
+#setupJSON{display:block;width:100%;min-height:330px;resize:vertical;padding:16px;border:1px solid #cbd6c2;border-radius:8px;background:#f8faf5;color:#27382c;font:13px/1.65 Consolas,"Microsoft YaHei",monospace;tab-size:2}
+#setupJSON:focus-visible{outline:3px solid #a2c477;outline-offset:2px}
+.setup-actions{display:flex;flex-wrap:wrap;gap:10px;margin:14px 0}
+#setupStatus{line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}
+#setupDialog a{color:#386c32}
+.sidebar>[data-setup]{margin-top:20px}

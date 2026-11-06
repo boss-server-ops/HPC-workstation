@@ -1,0 +1,18 @@
+{
+  "host": "my-hpc",
+  "nodeAddress": "192.0.2.10",
+  "hostKeyAlias": "",
+  "connectionMode": "direct",
+  "jump": {
+    "host": "",
+    "port": 22,
+    "username": "",
+    "fingerprint": ""
+  },
+  "nodes": [],
+  "claude": {
+    "command": "claude",
+    "configDir": ".claude"
+  },
+  "proxyPort": 1080
+}

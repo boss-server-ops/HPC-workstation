@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>文件管理 · HPC 工作台</title><link rel="icon" href="/favicon.svg"><link rel="stylesheet" href="/files.css"><script src="/files.js" defer></script></head>
+<body>
+ <aside class="sidebar"><a class="brand" href="/">›_ <span>HPC 工作台</span></a><a class="back" href="/">← 返回工作看板</a><div class="side-label">远端文件</div><button id="homeShortcut" class="side-button">⌂ 我的主目录</button><div class="side-label">项目快捷入口</div><nav id="projectShortcuts" aria-label="项目目录"></nav><div class="sidebar-note">文件操作沿用看板的连接通道。<br>可与 Claude 会话同时使用。</div></aside>
+ <main>
+  <header><div><div class="eyebrow">HPC WORKSPACE</div><h1>文件管理</h1><p>浏览服务器文件，把需要的内容带进来、带出去。</p></div><div class="connection"><span class="dot"></span><span id="connectionLabel">正在读取连接…</span><a href="/">连接设置 ↗</a></div></header>
+  <div id="notice" class="notice" role="alert" hidden></div>
+  <section class="files-panel" aria-label="远端文件浏览器">
+   <div class="path-toolbar"><button id="parentDirectory" class="icon-button" aria-label="上一级目录" title="上一级">↑</button><button id="refreshDirectory" class="icon-button" aria-label="刷新目录" title="刷新">↻</button><form id="pathForm"><label for="pathInput" class="sr-only">远端目录路径</label><input id="pathInput" placeholder="输入绝对路径，或 ~/" autocomplete="off" spellcheck="false"><button type="submit">前往</button></form><button id="copyDirectory" class="button secondary">复制当前路径</button></div>
+   <nav id="breadcrumbs" aria-label="当前目录"></nav>
+   <div class="actions"><div class="left-actions"><button id="chooseUpload" class="button primary">↑ 上传文件</button><input type="file" id="uploadInput" multiple hidden><button id="newFolder" class="button secondary">＋ 新建文件夹</button><button id="copySelection" class="button secondary" disabled>复制选中路径</button></div><div class="filters"><label class="hidden-toggle"><input type="checkbox" id="showHidden">显示隐藏文件</label><input type="search" id="fileSearch" placeholder="搜索当前目录…" aria-label="搜索当前目录"><select id="fileSort" aria-label="文件排序"><option value="name">名称排序</option><option value="modified">最近修改</option><option value="size">文件大小</option></select></div></div>
+   <div id="dropZone" class="drop-zone"><span>拖入文件即可自动上传，也可以拖到下方文件列表</span><small id="dropDestination">请先打开目标目录</small><small>多文件依次传输 · 单文件最大 20 GiB · 同名文件不会覆盖</small></div>
+   <div id="directoryStatus" class="directory-status" role="status">正在连接目录…</div>
+   <div class="table-scroll"><table><thead><tr><th class="select-col"><input id="selectAll" type="checkbox" aria-label="选择当前显示的全部文件"></th><th>名称</th><th>大小</th><th>修改时间</th><th>操作</th></tr></thead><tbody id="fileRows"></tbody></table></div>
+   <div id="emptyDirectory" class="empty" hidden>这个目录还是空的，上传文件开始使用。</div>
+  </section>
+  <section id="transfers" class="transfers" hidden><div class="section-heading"><h2>上传任务 <span id="transferCount"></span></h2><button id="clearTransfers" class="text-button">清除已结束任务</button></div><div id="transferRows"></div></section>
+  <footer>路径可直接粘贴给 Claude 或用于远端命令。文件下载交由浏览器保存。</footer>
+ </main>
+ <dialog id="folderDialog"><form id="folderForm"><div class="dialog-heading"><h2>新建文件夹</h2><button id="closeFolder" type="button" class="icon-button" aria-label="取消新建文件夹">×</button></div><p id="folderParent"></p><label for="folderName">文件夹名称</label><input id="folderName" required maxlength="255" autocomplete="off" placeholder="例如 data、results"><p id="folderError" role="alert"></p><button id="createFolder" class="button primary" type="submit">创建文件夹</button></form></dialog>
+ <dialog id="copyDialog"><div class="dialog-heading"><h2>复制远端路径</h2><button id="closeCopy" class="icon-button" aria-label="关闭复制窗口">×</button></div><p>浏览器暂不能直接写入剪贴板。选中的路径可按 Ctrl+C 复制。</p><textarea id="copyText" readonly aria-label="待复制的远端路径"></textarea></dialog>
+ <div id="toast" class="toast" role="status" hidden></div>
+</body></html>

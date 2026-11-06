@@ -1,0 +1,219 @@
+<!doctype html><html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>HPC Claude 工作看板 · 使用指南</title><style>*{box-sizing:border-box}body{margin:0;background:#f6f7f2;color:#24382c;font:16px/1.8 system-ui,"Microsoft YaHei",sans-serif}nav{position:fixed;inset:0 auto 0 0;width:260px;overflow:auto;padding:30px 22px;background:#eaf0e4;border-right:1px solid #dce4d7}nav strong{display:block;font-size:20px;margin-bottom:22px}nav a{display:block;padding:7px 0;font-size:14px}main{max-width:1100px;padding:40px 55px 90px;margin-left:260px}h1{font-size:32px;line-height:1.4}h2{margin-top:55px;padding-top:15px;border-top:1px solid #d4dfcf;scroll-margin-top:15px}h3{margin-top:28px}a{color:#386c32;text-decoration:none}a:hover{text-decoration:underline}pre{overflow:auto;padding:18px;background:#1e2d24;color:#e1efd7;border-radius:10px;font-size:14px;line-height:1.6}code{font-family:Consolas,monospace}p code,li code,td code{background:#e6eddf;padding:2px 5px;border-radius:4px}table{border-collapse:collapse;width:100%;font-size:15px}td,th{padding:12px;text-align:left;border:1px solid #d6dfd0}th{background:#e6eddf}li{margin:8px 0}@media(max-width:850px){nav{position:static;width:auto}main{margin:0;padding:25px}table{display:block;overflow:auto}}@media print{nav{display:none}main{margin:0;padding:0;max-width:none}h2{break-after:avoid}pre{white-space:pre-wrap;background:#eee;color:#111}}</style></head><body><nav><strong>HPC / 工作看板</strong><a href="#s0">1. 你会得到什么</a><a href="#s1">2. 安装前准备</a><a href="#s2">3. 配置自己的 SSH（只需做一次）</a><a href="#s3">4. 安装和启动</a><a href="#s4">5. 网页首次配置：校内或 VPN</a><a href="#s5">6. 校外：配置跳板机</a><a href="#s6">7. 多节点与重复会话保护</a><a href="#s7">8. 日常使用</a><a href="#s8">9. 故障排查</a><a href="#s9">10. 数据、卸载与再次分享</a><a href="#s10">11. 开发与验证</a></nav><main><h1>HPC Claude 工作看板使用指南</h1>
+<p>版本：Windows 分享版 1.1.0</p>
+<h2 id="s0">1. 你会得到什么</h2>
+<p>浏览器中的项目看板和 SSH 终端，可以继续远端已保存的 Claude Code 会话。关闭网页只断开查看窗口，由看板启动的 Claude 保留在远端 tmux 中。远端机器重启、管理员清理进程、作业被调度器结束，仍可能终止运行；届时可从已保存历史恢复。</p>
+<p>每个人用自己的 Windows 配置、SSH 身份、Linux 账号和 Claude 登录信息。分享包不含发布者的服务器地址、SSH 配置、密码、私钥、API Key、项目目录或会话历史。</p>
+<h2 id="s1">2. 安装前准备</h2>
+<h3>Windows 电脑</h3>
+<ul>
+<li>Windows 10/11 的 64 位系统。x64 已验证；ARM64 依赖有预编译包，但本版本未在 ARM64 设备上验证。</li>
+<li>从 <a href="https://nodejs.org/">https://nodejs.org/</a> 安装 Node.js 22 或更新的 <strong>LTS</strong>，保留 npm 与 PATH 选项。安装后重新打开安装程序。</li>
+<li>在 Windows「设置 → 可选功能」确认 <strong>OpenSSH 客户端</strong> 已安装。</li>
+<li>首次安装需访问 <a href="https://registry.npmjs.org/">https://registry.npmjs.org/</a> 下载依赖。平时只需能访问自己的 HPC 或跳板机。</li>
+</ul>
+<h3>Linux HPC</h3>
+<p>你的账号需要可用的 <code>python3</code>（3.6+）、<code>tmux</code>、<code>bash</code>、<code>claude</code>，且 Claude 已经完成自己的登录或 API 配置。在允许交互任务的节点上使用，并遵守集群的资源使用规则。</p>
+<p>HPC 登录需要 SSH 密钥或已解锁的 SSH agent。网页可输入的是<strong>跳板机密码</strong>；它不提供 HPC 密码、HPC 多因素认证或私钥口令的交互输入。HPC SSH 服务目前按 22 端口配置；跳板机端口可自定义。</p>
+<h2 id="s2">3. 配置自己的 SSH（只需做一次）</h2>
+<p>在自己的 <code>%USERPROFILE%\.ssh\config</code> 中添加一个别名。下面的地址和用户名全部是示例：</p>
+<pre><code class="language-sshconfig">Host my-hpc
+    HostName 192.0.2.10
+    User researcher
+    Port 22
+    IdentityFile ~/.ssh/id_ed25519
+    IdentitiesOnly yes
+</code></pre>
+<p>把地址、账号和密钥路径改成你的。将自己的公钥按学校流程安装到 HPC，私钥始终留在自己电脑。如果密钥有口令，先按系统的 SSH agent 流程解锁。</p>
+<p>第一次连接需要确认 HPC 主机指纹。请向管理员核对后，在 PowerShell 运行一次：</p>
+<pre><code class="language-powershell">ssh -o HostKeyAlias=192.0.2.10 my-hpc
+</code></pre>
+<p>进入后确认这些命令可用：</p>
+<pre><code class="language-bash">python3 --version
+tmux -V
+claude --version
+</code></pre>
+<p>退出远端后，用下面的命令确认无需交互输入就能登录：</p>
+<pre><code class="language-powershell">ssh -o BatchMode=yes -o StrictHostKeyChecking=yes -o HostKeyAlias=192.0.2.10 my-hpc &quot;echo SSH_OK&quot;
+</code></pre>
+<p>如果只能从校外跳板机进入，首次确认 HPC 主机密钥时增加 <code>-J jumpuser@198.51.100.20</code>。此步骤可能分别要求跳板密码或密钥认证。看板的连接通道会覆盖 SSH 配置中的 ProxyJump/ProxyCommand，因此网页切换通道不会受原配置的跳板设置干扰。</p>
+<p><strong>固定节点很重要：</strong> <code>nodeAddress</code> 必须指向一台固定机器，不能用随机分配节点的负载均衡入口。<code>host</code> 别名主要提供你的 User、IdentityFile 等 SSH 选项，实际连接地址由网页配置指定。</p>
+<h2 id="s3">4. 安装和启动</h2>
+<ol>
+<li>完整解压 ZIP。不要直接在压缩包预览窗口内运行，也不要放在只读目录。</li>
+<li>双击 <code>Install.cmd</code>。它检查依赖、执行 <code>npm ci</code>、测试 Windows 终端组件，然后记录本机 Node 路径。</li>
+<li>安装成功后自动打开网页。桌面快捷方式可日常启动；Windows 登录启动快捷方式会静默运行后台，不自动弹出浏览器。</li>
+</ol>
+<p>安装器不需要创建系统服务或存储 Windows 密码。标准用户可以写入自己的安装目录和快捷方式即可。</p>
+<p>若不需要登录启动，可在解压目录的 PowerShell 运行：</p>
+<pre><code class="language-powershell">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1 -NoAutoStart
+</code></pre>
+<p>若默认的 43127/43128 端口被其他应用占用，安装器会提示，不会终止其他程序。选择两个不同的空闲端口：</p>
+<pre><code class="language-powershell">powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\Install.ps1 -Port 43227 -StatusPort 43228
+</code></pre>
+<p>此时网页为 <code>http://127.0.0.1:43227/</code>。移走安装目录、升级 Node 路径或重装依赖前，先运行 <code>Uninstall.cmd</code> 或 <code>Stop.cmd</code>；在新位置重新安装快捷方式。更换端口时重新安装需要继续指定端口。</p>
+<h2 id="s4">5. 网页首次配置：校内或 VPN</h2>
+<p>点击「配置我的服务器」，把下面的 JSON 改为自己的值：</p>
+<pre><code class="language-json">{
+  &quot;host&quot;: &quot;my-hpc&quot;,
+  &quot;nodeAddress&quot;: &quot;192.0.2.10&quot;,
+  &quot;hostKeyAlias&quot;: &quot;&quot;,
+  &quot;connectionMode&quot;: &quot;direct&quot;,
+  &quot;jump&quot;: { &quot;host&quot;: &quot;&quot;, &quot;port&quot;: 22, &quot;username&quot;: &quot;&quot;, &quot;fingerprint&quot;: &quot;&quot; },
+  &quot;nodes&quot;: [],
+  &quot;claude&quot;: { &quot;command&quot;: &quot;claude&quot;, &quot;configDir&quot;: &quot;.claude&quot; }
+}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>字段</th>
+<th>填什么</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>host</code></td>
+<td>本机 SSH 配置中的别名，例如 <code>my-hpc</code></td>
+</tr>
+<tr>
+<td><code>nodeAddress</code></td>
+<td>固定 HPC 节点地址</td>
+</tr>
+<tr>
+<td><code>hostKeyAlias</code></td>
+<td>通常留空，即按节点地址核对 known_hosts；如管理员有专门的主机密钥别名，可填写它</td>
+</tr>
+<tr>
+<td><code>connectionMode</code></td>
+<td><code>direct</code> 表示校内/VPN，<code>jump</code> 表示校外跳板机</td>
+</tr>
+<tr>
+<td><code>jump</code></td>
+<td>只走直连时保持空；使用校外时按下一节填写</td>
+</tr>
+<tr>
+<td><code>nodes</code></td>
+<td>初次保留 <code>[]</code>，由「验证并登记节点」读取并保存节点身份</td>
+</tr>
+<tr>
+<td><code>claude.command</code></td>
+<td>默认 <code>claude</code>。可填在远端 <code>.bashrc</code> 中定义的命令或 shell 函数名，不带参数</td>
+</tr>
+<tr>
+<td><code>claude.configDir</code></td>
+<td>默认 <code>.claude</code>，相对远端家目录；也支持绝对路径，例如 <code>/home/researcher/claude-work</code></td>
+</tr>
+</tbody></table>
+<p>配置中不要填私钥、密码或 API Key。保存接口仅保留上述允许的字段，未知字段不会作为连接凭据保存。</p>
+<p>依次点击：<strong>保存配置 → 验证并登记节点 → 读取我的项目</strong>。验证通过 SSH 读取主机名与 <code>/etc/machine-id</code>，不启动 Claude。完成后会从你的 Claude 资料目录索引历史项目。每个项目目录最多读取最近 30 个会话文件，较早的会话需要使用原始 Claude 会话选择功能查找。</p>
+<p>自定义 Claude 命令必须尊重传入的 <code>CLAUDE_CONFIG_DIR</code>，不能在函数内改为别的账号目录。这个版本每个安装使用一个资料目录。不要让多个安装以同一远端 Linux 账号同时配置不同的资料目录；远端辅助脚本和 profile 配置按 Linux 账号共享。</p>
+<h2 id="s5">6. 校外：配置跳板机</h2>
+<p>保留同一 HPC 别名和固定节点，把 <code>connectionMode</code> 改为 <code>jump</code>，按自己的跳板机填写：</p>
+<pre><code class="language-json">&quot;jump&quot;: {
+  &quot;host&quot;: &quot;198.51.100.20&quot;,
+  &quot;port&quot;: 22,
+  &quot;username&quot;: &quot;jumpuser&quot;,
+  &quot;fingerprint&quot;: &quot;SHA256:这里替换成管理员提供的43位指纹&quot;
+}
+</code></pre>
+<p>这段只是 JSON 中的 <code>jump</code> 字段；不要直接替换整个配置。示例指纹故意不可用，必须填管理员确认的真实值。管理员可在跳板机上用 <code>ssh-keygen -lf /etc/ssh/ssh_host_ed25519_key.pub -E sha256</code> 等方式提供指纹。不要直接信任未经核对的 <code>ssh-keyscan</code> 结果。</p>
+<p>依次点击：<strong>保存配置 → 登录校外跳板机 → 输入自己的跳板密码 → 验证并登记节点 → 读取我的项目</strong>。</p>
+<p>跳板机需允许转发到 HPC 的 22 端口。密码仅用于本次认证，不写入配置或日志；通道断开、本地服务重启后需重新输入。目前网页跳板认证使用密码，不支持跳板机 MFA/纯密钥认证。</p>
+<p>之后使用网页顶部「校内 / VPN 直连」或「校外 / 跳板机」切换。切换只重建访问通道，远端 tmux 会话保留。跳板认证成功仅说明第一段连接成功，跳板机到 HPC 的网络也必须连通。</p>
+<h3>校园客户端的 SOCKS5 连接</h3>
+<p>如果校园客户端提供本地 SOCKS5 端口，在服务器配置中添加 <code>&quot;proxyPort&quot;: 1080</code>，并把 <code>connectionMode</code> 改成 <code>proxy</code>。端口按自己的客户端设置，节点必须填写 IPv4 地址。先连接校园客户端，再保存配置、验证节点并读取项目。网页顶部可切换「校园 SOCKS」。</p>
+<p>这是看板到 HPC 的 SSH 通道，不会修改全局网络，也不等于服务器访问 Claude API 的出口代理。若只能通过 SOCKS 登记首次主机密钥，请使用支持该 SOCKS 的 SSH 客户端核对并写入 Windows OpenSSH 的 known_hosts，或在校园网中完成首次登记；看板不会自动信任未知主机。</p>
+<h2 id="s6">7. 多节点与重复会话保护</h2>
+<p>如果历史会话可能在其他节点运行，先在 <code>nodes</code> 中增加它们的固定地址：</p>
+<pre><code class="language-json">&quot;nodes&quot;: [
+  { &quot;address&quot;: &quot;192.0.2.10&quot; },
+  { &quot;address&quot;: &quot;192.0.2.11&quot; }
+]
+</code></pre>
+<p>对已经验证过的节点，保留自动生成的 <code>hostname</code>、<code>machineId</code> 等字段；不要拿此示例覆盖已有身份。保存后在「待验证节点」逐个填地址并验证。添加节点后若使用校外通道，需要重新登录跳板机。每个节点都要能使用该 SSH 别名中的同一账号和密钥登录，且这些节点应共享同一 Linux 家目录和 Claude 会话资料目录。</p>
+<p>看板会核对 PID、进程启动时间、机器身份与会话占用记录，并通过原子占用记录防止看板并发重复拉起同一条会话。找不到节点、节点不通、身份变化或无法判定占用时，会阻止新启动。请先恢复连接或核实身份，不要直接删占用记录。它不能约束所有外部终端手动启动的 Claude；发现冲突后会保守处理。</p>
+<h2 id="s7">8. 日常使用</h2>
+<ul>
+<li><strong>继续上次 / 历史会话：</strong> 优先接回仍运行的原 tmux；已退出的会话可从已保存的历史恢复。</li>
+<li><strong>关闭网页 / 关闭终端标签：</strong> 断开本地查看，远端 tmux 和其中的 Claude 继续运行。</li>
+<li><strong>只读：</strong> 另一个网页正在输入，或检测到同一会话重复实例。前者可以「接管输入」；后者使用「找回旧会话」，预览后选择要保留的实例。</li>
+<li><strong>重连：</strong> 修复浏览器到原远端进程的连接。若进程本身卡住，重连仍会回到同一进程。</li>
+<li><strong>重启当前会话：</strong> 先显示将结束的进程，确认后结束它，再从同一会话的已保存历史恢复。未完成的请求可能中断；该操作不会由普通重连自动触发。</li>
+<li><strong>复制：</strong> 按住 Shift 拖选文字，再 Ctrl+C；没有选中文字时 Ctrl+C 仍用于中断终端任务。也可用工具栏「复制」。</li>
+<li><strong>粘贴：</strong> 先点击终端，再 Ctrl+V；浏览器剪贴板权限受限时，用工具栏「粘贴」打开输入框，粘入文字后点击插入。多行文字不会自动附加 Enter。</li>
+<li><strong>滚动历史：</strong> 鼠标放在终端中滚动会进入 tmux 历史，回到底部或退出 tmux 复制模式后继续输入。另有浏览器终端缓冲区；原会话完整历史保存在远端 Claude 资料目录中。</li>
+</ul>
+<p>在普通 SSH 终端中启动、没有 tmux 托管的旧进程，无法无损接入网页。先回原终端正常退出 Claude，再由看板恢复同一历史；看板不会因此偷偷启动第二份。</p>
+<h3>文件管理、拖放上传和下载</h3>
+<p>点击侧栏「文件管理」，在独立页面浏览远端目录。先进入目标目录，再拖入文件即可自动上传。支持多文件依次上传、进度显示和取消，单文件上限 20 GiB，同名文件拒绝覆盖；整个目录请先打包。进度显示「HPC 已保存」后才算成功，上传时保持网页及网络连接。</p>
+<p>文件列表可下载、复制单个或多个路径，也可新建文件夹。文件操作沿用当前 SSH 通道和账号权限。连接新服务器前需先保存配置并验证节点。</p>
+<h2 id="s8">9. 故障排查</h2>
+<table>
+<thead>
+<tr>
+<th>表现</th>
+<th>检查和处理</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>网页打不开、连接被拒绝</td>
+<td>双击 <code>Start.cmd</code>；确认安装成功以及使用了正确端口。查看 <code>data/launcher-error.log</code>、<code>data/server-error.log</code>、<code>data/supervisor.log</code></td>
+</tr>
+<tr>
+<td>安装找不到 node/npm/ssh</td>
+<td>安装 Node LTS 和 OpenSSH；重新打开安装程序，使 PATH 生效</td>
+</tr>
+<tr>
+<td>npm ci 下载失败</td>
+<td>确认 npm registry 可访问，按所在网络要求配置自己的代理，然后重新安装；不要复制他人的 node_modules</td>
+</tr>
+<tr>
+<td>首次显示配置弹窗</td>
+<td>正常。这是空配置分享版，需要填写自己的服务器</td>
+</tr>
+<tr>
+<td><code>Permission denied (publickey)</code></td>
+<td>检查 SSH 别名中的 User/IdentityFile、公钥授权和 agent 是否解锁；先通过第 3 节 BatchMode 测试</td>
+</tr>
+<tr>
+<td><code>Host key verification failed</code></td>
+<td>按网页使用的 HostKeyAlias（默认固定节点地址）核对并登记正确主机密钥；不要关闭主机密钥检查</td>
+</tr>
+<tr>
+<td>跳板指纹不匹配</td>
+<td>向管理员确认实际使用的主机密钥算法和指纹，核实后修改；不要随意跳过</td>
+</tr>
+<tr>
+<td>跳板已登录但 HPC 超时</td>
+<td>检查跳板到固定节点的 22 端口和校园网络；也可在校园网/VPN 下切换直连</td>
+</tr>
+<tr>
+<td>节点身份变了</td>
+<td>与管理员核实是否重装、地址变化或使用了负载均衡地址。确认后重新配置并验证，程序不自动覆盖旧身份</td>
+</tr>
+<tr>
+<td>重连后仍卡住</td>
+<td>重连保留原进程；先检查是否停在 tmux 历史/选择模式。确实需要重启时用带确认的重启入口</td>
+</tr>
+<tr>
+<td>只看到部分历史</td>
+<td>确认 <code>claude.configDir</code> 与原来一致；索引限最近 30 个文件，并过滤子代理记录</td>
+</tr>
+<tr>
+<td>新会话启动后立即退出</td>
+<td>确认远端 bash、tmux、Claude 命令与登录配置有效；自定义 shell 函数应在交互 bash 的 <code>.bashrc</code> 中可用</td>
+</tr>
+</tbody></table>
+<p>本地 supervisor 会在本地服务异常退出后自动拉起它，不会因此重启远端 Claude。Windows 注销/关机期间本地网页不可访问，下次登录后后台入口会恢复；远端进程是否继续取决于 HPC 本身。</p>
+<h2 id="s9">10. 数据、卸载与再次分享</h2>
+<ul>
+<li>本机 <code>data/config.json</code> 保存自己的服务器设置、星标等；<code>data/snapshot.json</code> 保存项目及会话摘要；日志可能带有自己的路径/诊断信息。</li>
+<li>SSH 私钥、known_hosts 在自己的 SSH 环境，Claude 登录凭据在远端。安装包不会修改或复制这些凭据。</li>
+<li>远端辅助脚本写入 <code>~/.local/state/hpc-claude-board/runtime-v3/</code>，保护记录位于同一父目录的 <code>session-owners/</code>，tmux 使用 <code>hpc-claude-board</code> server。不要在会话运行中删除它们。</li>
+<li><code>Stop.cmd</code> 只停止此安装目录的本地看板；<code>Uninstall.cmd</code> 还移除它的快捷方式。二者都保留远端会话及本地数据。</li>
+<li>若要彻底清除本地数据，先卸载并确认备份需要的配置，再手动删除解压目录。卸载不登录远端执行清理。</li>
+<li>发给别人时使用原始发布 ZIP。开发者也可以运行 <code>node package-release.mjs</code>，它仅打包明确列出的源文件和指南，自动排除 data、node_modules、日志和 SSH 文件，并生成 SHA256 清单。</li>
+</ul>
+<h2 id="s10">11. 开发与验证</h2>
+<p>在安装好依赖的目录运行 <code>npm test</code> 验证配置、HTTP 首次启动、连接参数、复制粘贴、只读保护、重连和 supervisor。若本机也有 Python，可运行 <code>python -m unittest discover -s test -p &quot;test_*.py&quot;</code> 验证远端索引/保护逻辑。</p>
+<p>本版本在 Windows x64 验证了干净依赖安装、首次配置网页、Windows PTY 和本地后台恢复；不会使用发布者的实际 HPC 会话做分享版测试。不同集群的 SSH 策略、Claude 版本和节点共享目录方式，需要使用者按本文自行配置并验证。</p>
+</main></body></html>

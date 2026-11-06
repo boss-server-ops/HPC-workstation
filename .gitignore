@@ -1,0 +1,17 @@
+node_modules/
+data/
+*.log
+*.zip
+__pycache__/
+.env*
+dist/
+*.pem
+*.key
+*.pub
+*.jsonl
+.ssh/
+config.local.json
+config.*.backup.json
+*.bak
+.DS_Store
+Thumbs.db
